@@ -59,7 +59,7 @@
 <div class="card">
   <form method="post" action="/clients/{{ client.id }}/findings">
     <label for="finding_name">Naam bevinding</label>
-    <input type="text" id="finding_name" name="finding_name" required placeholder="bijv. KB5094122: Windows Security Update">
+    <input type="text" id="finding_name" name="finding_name" required placeholder="bijv. Voorbeeld Update XYZ-1234">
 
     <div class="form-row">
       <div>
@@ -78,7 +78,7 @@
     </div>
 
     <label for="hosts">Hosts (komma-gescheiden)</label>
-    <input type="text" id="hosts" name="hosts" placeholder="bijv. ws1.broodfonds.nl, dev-ws1.broodfonds.nl">
+    <input type="text" id="hosts" name="hosts" placeholder="bijv. host1.voorbeeldklant.test, host2.voorbeeldklant.test">
 
     <div class="form-row">
       <div>
@@ -95,7 +95,7 @@
     <input type="text" id="cves" name="cves" placeholder="bijv. CVE-2026-12345, CVE-2026-12346">
 
     <label for="solution">Oplossing/advies (optioneel)</label>
-    <textarea id="solution" name="solution" placeholder="bijv. Apply Security Update 5094122"></textarea>
+    <textarea id="solution" name="solution" placeholder="bijv. Update toepassen naar laatste versie"></textarea>
 
     <div style="margin-top:14px;">
       <button type="submit" class="btn">Bevinding toevoegen</button>
@@ -140,7 +140,7 @@
     <textarea id="raw_text" name="raw_text" placeholder="Vrije notities over de meeting"></textarea>
 
     <label for="action_items_text">Actiepunten (één per regel)</label>
-    <textarea id="action_items_text" name="action_items_text" placeholder="TLS 1.1 uitschakelen op fms1.broodfonds.nl | open&#10;MySQL Connectors patchen | open&#10;Speculative execution rdsh | accepted"></textarea>
+    <textarea id="action_items_text" name="action_items_text" placeholder="Voorbeeld actiepunt 1 | open&#10;Voorbeeld actiepunt 2 | resolved&#10;Voorbeeld actiepunt 3 | accepted"></textarea>
     <div class="helptext">Formaat per regel: "tekst" of "tekst | status" (status: open / resolved / accepted). Zonder status wordt "open" gebruikt.</div>
 
     <div style="margin-top:14px;">
