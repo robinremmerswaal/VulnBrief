@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Briefing — {{ briefing.client_name }} — VulnBrief{% endblock %}
+{% block content %}
+<a href="/briefings" class="helptext">← Terug naar geschiedenis</a>
+<h1 style="margin-top:14px;">{{ briefing.client_name }}</h1>
+<p class="subtitle">Gegenereerd op {{ briefing.generated_at[:16].replace('T', ' ') }}</p>
+
+<div class="card briefing-content">
+  {{ html_content | safe }}
+</div>
+{% endblock %}
