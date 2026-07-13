@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}{{ client.name }} — VulnBrief{% endblock %}
+{% block content %}
+<h1>{{ client.name }}</h1>
+{% if client.notes %}<p class="subtitle">{{ client.notes }}</p>{% endif %}
+
+<form method="post" action="/clients/{{ client.id }}/generate" style="margin-bottom:22px;">
+  <button type="submit" class="btn">⚡ Briefing genereren</button>
+  <span class="helptext">Gebruikt alle bevindingen hieronder + de meest recente vorige-meeting-notitie.</span>
+</form>
+
+<h2>Bevindingen ({{ findings|length }})</h2>
+<div class="card">
+  {% if findings %}
+  <table>
+    <thead>
+      <tr><th>Bevinding</th><th>Severity</th><th>Hosts</th><th>Leeftijd</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for f in findings %}
+      <tr>
+        <td>
+          <div>{{ f.finding_name }}</div>
+          {% if f.solution %}<div class="helptext">{{ f.solution }}</div>{% endif %}
+        </td>
+        <td><span class="sev sev-{{ f.severity.lower() }}">{{ f.severity }}</span></td>
+        <td class="helptext">{{ f.hosts }}</td>
+        <td>{{ f.age_days }}d</td>
+        <td>
+          {% if f.is_resolved %}
+            <span class="pill pill-resolved">OPGELOST</span>
+          {% else %}
+            <span class="pill pill-open">OPEN</span>
+          {% endif %}
+        </td>
+        <td>
+          <form class="inline" method="post" action="/findings/{{ f.id }}/toggle-resolved">
+            <input type="hidden" name="client_id" value="{{ client.id }}">
+            <input type="hidden" name="resolved" value="{{ 0 if f.is_resolved else 1 }}">
+            <button type="submit" class="btn btn-small btn-secondary">
+              {{ "Heropenen" if f.is_resolved else "Markeer opgelost" }}
+            </button>
+          </form>
+          <form class="inline" method="post" action="/findings/{{ f.id }}/delete" onsubmit="return confirm('Bevinding verwijderen?');">
+            <input type="hidden" name="client_id" value="{{ client.id }}">
+            <button type="submit" class="btn btn-small btn-danger">Verwijder</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">Nog geen bevindingen ingevoerd.</div>
+  {% endif %}
+</div>
+
+<h2>Bevinding toevoegen</h2>
+<div class="card">
+  <form method="post" action="/clients/{{ client.id }}/findings">
+    <label for="finding_name">Naam bevinding</label>
+    <input type="text" id="finding_name" name="finding_name" required placeholder="bijv. KB5094122: Windows Security Update">
+
+    <div class="form-row">
+      <div>
+        <label for="severity">Severity</label>
+        <select id="severity" name="severity" required>
+          <option value="Critical">Critical</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </div>
+      <div>
+        <label for="age_days">Leeftijd (dagen)</label>
+        <input type="number" id="age_days" name="age_days" value="0" min="0">
+      </div>
+    </div>
+
+    <label for="hosts">Hosts (komma-gescheiden)</label>
+    <input type="text" id="hosts" name="hosts" placeholder="bijv. ws1.broodfonds.nl, dev-ws1.broodfonds.nl">
+
+    <div class="form-row">
+      <div>
+        <label for="cvss_score">CVSS-score (optioneel)</label>
+        <input type="text" id="cvss_score" name="cvss_score" placeholder="bijv. 9.8">
+      </div>
+      <div>
+        <label for="vpr_score">VPR-score (optioneel)</label>
+        <input type="text" id="vpr_score" name="vpr_score" placeholder="bijv. 7.1">
+      </div>
+    </div>
+
+    <label for="cves">CVE's (komma-gescheiden, optioneel)</label>
+    <input type="text" id="cves" name="cves" placeholder="bijv. CVE-2026-12345, CVE-2026-12346">
+
+    <label for="solution">Oplossing/advies (optioneel)</label>
+    <textarea id="solution" name="solution" placeholder="bijv. Apply Security Update 5094122"></textarea>
+
+    <div style="margin-top:14px;">
+      <button type="submit" class="btn">Bevinding toevoegen</button>
+    </div>
+  </form>
+</div>
+
+<h2>Vorige meeting-notities</h2>
+<div class="card">
+  {% if previous_notes %}
+    {% for note in previous_notes %}
+    <div style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border);">
+      <div style="font-weight:600;margin-bottom:6px;">{{ note.meeting_date }}</div>
+      {% if note.raw_text %}<div class="helptext" style="margin-bottom:10px;white-space:pre-wrap;">{{ note.raw_text }}</div>{% endif %}
+      {% for item in note.action_items %}
+      <div class="action-item-row">
+        <span>{{ item.text }}</span>
+        <form method="post" action="/action-items/{{ item.id }}/status">
+          <input type="hidden" name="client_id" value="{{ client.id }}">
+          <select name="status" onchange="this.form.submit()">
+            <option value="open" {% if item.status == 'open' %}selected{% endif %}>Open</option>
+            <option value="resolved" {% if item.status == 'resolved' %}selected{% endif %}>Opgelost</option>
+            <option value="accepted" {% if item.status == 'accepted' %}selected{% endif %}>Geaccepteerd risico</option>
+          </select>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty">Nog geen vorige-meeting-notities ingevoerd.</div>
+  {% endif %}
+</div>
+
+<h2>Vorige meeting-notitie toevoegen</h2>
+<div class="card">
+  <form method="post" action="/clients/{{ client.id }}/previous-notes">
+    <label for="meeting_date">Datum vorige meeting</label>
+    <input type="date" id="meeting_date" name="meeting_date" value="{{ today }}" required>
+
+    <label for="raw_text">Losse notities (optioneel)</label>
+    <textarea id="raw_text" name="raw_text" placeholder="Vrije notities over de meeting"></textarea>
+
+    <label for="action_items_text">Actiepunten (één per regel)</label>
+    <textarea id="action_items_text" name="action_items_text" placeholder="TLS 1.1 uitschakelen op fms1.broodfonds.nl | open&#10;MySQL Connectors patchen | open&#10;Speculative execution rdsh | accepted"></textarea>
+    <div class="helptext">Formaat per regel: "tekst" of "tekst | status" (status: open / resolved / accepted). Zonder status wordt "open" gebruikt.</div>
+
+    <div style="margin-top:14px;">
+      <button type="submit" class="btn">Notitie toevoegen</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
